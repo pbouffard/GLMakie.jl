@@ -12,17 +12,22 @@ macro print_error(expr)
 end
 
 function addbuttons(scene::Scene, name, button, action, ::Type{ButtonEnum}) where ButtonEnum
+    @info "addbuttons"
     event = getfield(scene.events, name)
     set = event[]
     button_enum = ButtonEnum(Int(button))
     if button != GLFW.KEY_UNKNOWN
         if action == GLFW.PRESS
+            @info "press"
             push!(set, button_enum)
         elseif action == GLFW.RELEASE
+            @info "release"
             delete!(set, button_enum)
         elseif action == GLFW.REPEAT
+            @info "repeat"
             # nothing needs to be done, besides returning the same set of keys
         else
+            @info "unrecognized $action"
             error("Unrecognized enum value for GLFW button press action: $action")
         end
     end

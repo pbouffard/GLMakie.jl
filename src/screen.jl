@@ -1,3 +1,5 @@
+using Infiltrator
+
 const ScreenID = UInt8
 const ZIndex = Int
 # ID, Area, clear, is visible, background color
@@ -385,6 +387,8 @@ function global_gl_screen(resolution::Tuple, visibility::Bool, tries = 1)
 end
 
 function pick_native(screen::Screen, xy::Vec{2, Float64})
+    @info "1 pick_native(screen::Screen, $xy"
+    # @infiltrate
     isopen(screen) || return SelectionID{Int}(0, 0)
     sid = Base.RefValue{SelectionID{UInt32}}()
     window_size = widths(screen)
@@ -398,10 +402,13 @@ function pick_native(screen::Screen, xy::Vec{2, Float64})
         glReadPixels(x, y, 1, 1, buff.format, buff.pixeltype, sid)
         return convert(SelectionID{Int}, sid[])
     end
-    return return SelectionID{Int}(0, 0)
+    ret = SelectionID{Int}(0, 0)
+    @info ret
+    return ret
 end
 
 function pick_native(screen::Screen, xy::Vec{2, Float64}, range::Float64)
+    @info "2 pick_native(screen::Screen, $xy, $range"
     isopen(screen) || return SelectionID{Int}(0, 0)
     window_size = widths(screen)
     fb = screen.framebuffer
@@ -424,32 +431,41 @@ function pick_native(screen::Screen, xy::Vec{2, Float64}, range::Float64)
         if (d < min_dist) && (sid[i, j][2] < 0x3f800000)
             min_dist = d
             id = convert(SelectionID{Int}, sid[i, j])
+            @info id
         end
     end
     return id
 end
 
 function AbstractPlotting.pick(scene::SceneLike, screen::Screen, xy::Vec{2, Float64})
+    @info "3 AbstractPlotting.pick(scene::SceneLike, screen::Screen, $xy"
+    # @infiltrate
     sid = pick_native(screen, xy)
     if haskey(screen.cache2plot, sid.id)
         plot = screen.cache2plot[sid.id]
+        @info "true, $(sid.index)"
         return (plot, sid.index)
     else
+        @info "false"
         return (nothing, 0)
     end
 end
 
 function AbstractPlotting.pick(scene::SceneLike, screen::Screen, xy::Vec{2, Float64}, range::Float64)
+    @info "4 AbstractPlotting.pick(scene::SceneLike, screen::Screen, $xy, $range"
     sid = pick_native(screen, xy, range)
     if haskey(screen.cache2plot, sid.id)
         plot = screen.cache2plot[sid.id]
+        @info "true"
         return (plot, sid.index)
     else
+        @info "false"
         return (nothing, 0)
     end
 end
 
 function AbstractPlotting.pick(screen::Screen, rect::IRect2D)
+    @info "5 AbstractPlotting.pick(screen::Screen, $rect"
     window_size = widths(screen)
     fb = screen.framebuffer
     buff = fb.buffers[:objectid] #fb.objectid
