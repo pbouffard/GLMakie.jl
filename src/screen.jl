@@ -452,7 +452,8 @@ end
 function AbstractPlotting.pick(screen::Screen, rect::IRect2D)
     window_size = widths(screen)
     fb = screen.framebuffer
-    buff = fb.objectid
+    buff = fb.buffers[:objectid] #fb.objectid
+    
     glBindFramebuffer(GL_FRAMEBUFFER, fb.id[1])
     glReadBuffer(GL_COLOR_ATTACHMENT1)
     x, y = minimum(rect)
